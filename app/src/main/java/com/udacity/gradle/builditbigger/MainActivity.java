@@ -1,11 +1,10 @@
 package com.udacity.gradle.builditbigger;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,7 +20,9 @@ import com.ymsgsoft.udacity.backend.joke.myApi.MyApi;
 import java.io.IOException;
 
 
-public class MainActivity extends AppCompatActivity implements MainActivityFragment.ProgressBarCallbacks {
+public class MainActivity extends AppCompatActivity implements
+        MainActivityFragment.ProgressBarCallbacks,
+        PostExecuteCallbacks {
     private ProgressBar mProgressBar;
 
     @Override
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
         return true;
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -60,14 +62,24 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
 
     public void tellJoke(View view){
         mProgressBar.setVisibility(View.VISIBLE);
-        new EndpointsAsyncTask().execute(new Pair<Context, ProgressBar>(this, mProgressBar));
+        EndpointsAsyncTask task =new EndpointsAsyncTask();
+        task.mCallback = this;
+        task.execute();
     }
-    public class EndpointsAsyncTask extends AsyncTask<Pair<Context, ProgressBar>, Void, String> {
-        private ProgressBar mProgressBar;
+    @Override
+    public void AsyncTaskPostCallbackResult(String result) {
+        mProgressBar.setVisibility(View.GONE);
+        Intent intent = new Intent( this, MyJokeActivity.class);
+        intent.putExtra(MyJokeActivity.JOKE_KEY, result);
+        startActivity(intent);
+    }
+
+    public class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
+        private final String LOG_TAG = EndpointsAsyncTask.class.getSimpleName();
         private MyApi myApiService = null;
-        private Context context;
+        public PostExecuteCallbacks mCallback;
         @Override
-        protected String doInBackground(Pair<Context, ProgressBar>... params) {
+        protected String doInBackground(Void... params) {
             if (myApiService == null) {  // Only do this once
                 MyApi.Builder builder = new MyApi.Builder(AndroidHttp.newCompatibleTransport(),
                         new AndroidJsonFactory(), null)
@@ -85,29 +97,27 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
                 myApiService = builder.build();
             }
 
-            context = params[0].first;
-            mProgressBar = params[0].second;
             // add wait time to test progress
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-
+                Log.d( LOG_TAG, e.getMessage());
+                return null;
             }
             try {
                 return myApiService.getJoke().execute().getData();
             } catch (IOException e) {
-                return e.getMessage();
+                Log.d( LOG_TAG, e.getMessage());
+                return null;
             }
         }
 
         @Override
         protected void onPostExecute(String result) {
-            // delay sometime
-
-            mProgressBar.setVisibility(View.GONE);
-            Intent intent = new Intent( context, MyJokeActivity.class);
-            intent.putExtra(MyJokeActivity.JOKE_KEY, result);
-            startActivity(intent);
+            if (mCallback != null)
+                mCallback.AsyncTaskPostCallbackResult(result);
         }
     }
 }
+
+
