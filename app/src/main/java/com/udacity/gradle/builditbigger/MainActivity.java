@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
@@ -69,9 +70,13 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void AsyncTaskPostCallbackResult(String result) {
         mProgressBar.setVisibility(View.GONE);
-        Intent intent = new Intent( this, MyJokeActivity.class);
-        intent.putExtra(MyJokeActivity.JOKE_KEY, result);
-        startActivity(intent);
+        if ( result != null) {
+            Intent intent = new Intent(this, MyJokeActivity.class);
+            intent.putExtra(MyJokeActivity.JOKE_KEY, result);
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "Joke Server is down", Toast.LENGTH_LONG).show();
+        }
     }
 
     public static class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
@@ -98,12 +103,12 @@ public class MainActivity extends AppCompatActivity implements
             }
 
             // add wait time to test progress
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Log.d( LOG_TAG, e.getMessage());
-                return null;
-            }
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException e) {
+//                Log.d( LOG_TAG, e.getMessage());
+//                return null;
+//            }
             try {
                 return myApiService.getJoke().execute().getData();
             } catch (IOException e) {
