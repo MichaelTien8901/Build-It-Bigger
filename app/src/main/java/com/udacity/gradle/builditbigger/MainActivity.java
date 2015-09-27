@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(intent);
     }
 
-    public class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
+    public static class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
         private final String LOG_TAG = EndpointsAsyncTask.class.getSimpleName();
         private MyApi myApiService = null;
         public PostExecuteCallbacks mCallback;
