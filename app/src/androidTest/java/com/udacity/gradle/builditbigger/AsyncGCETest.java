@@ -12,8 +12,9 @@ public class AsyncGCETest extends AndroidTestCase implements PostExecuteCallback
     private CountDownLatch latch = new CountDownLatch(1);
 
     public void testAsyncTaskForGCEJoke() {
-        MainActivity.EndpointsAsyncTask task = new MainActivity.EndpointsAsyncTask();
+        EndpointsAsyncTask task = new EndpointsAsyncTask();
         task.mCallback = this;
+        task.mContext = getContext();
         task.execute();
         try {
             latch.await(10, TimeUnit.SECONDS); // wait 10 seconds
